@@ -1,16 +1,11 @@
 package com.example.AtiperaRec;
 
-import jakarta.websocket.server.PathParam;
 import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,16 +13,16 @@ import java.util.List;
 @RestController
 public class Controller {
 
-    //, produces = "application/json"
-
     @ResponseBody
-    @GetMapping("/{username}")
+    @GetMapping(value = "/{username}", produces = "application/json")
     public ResponseEntity<?> fetchData(@PathVariable String username) {
         ////Listowanie repozytoriów i nazwy użytkownika
         String url = "https://api.github.com/users/" + username + "/repos";
         RestTemplate restTemplate = new RestTemplate();
+        //Lista nazw repozytoriów
         LinkedList<String> repoListPag = new LinkedList<>();
         String autor = "";
+        //Kolekcja mapująca Listę branchy do nazw repozytorium
         HashMap<String, List<String>> repBranchMap = new HashMap<>();
 
         while(url != null){
@@ -72,9 +67,8 @@ public class Controller {
                 url = null;
             }
         }
-        System.out.println("Autor: " + autor);
 
-        /*
+
         for(String repoName : repoListPag){
             String branchUrl = "https://api.github.com/repos/" + username + "/" + repoName + "/branches";
 
@@ -93,43 +87,21 @@ public class Controller {
             repBranchMap.put(repoName, branchList);
         }
 
+        String jsonResponse = "";
+        jsonResponse += "OwnerLogin: " + autor + "\n";
         for(String x : repBranchMap.keySet()){
-            System.out.println("Nazwa repo: " + x);
-            System.out.println("Lista branchy: " + repBranchMap.get(x));
+            jsonResponse += "Repository Name: " + "\n" + x + "\n";
+            jsonResponse += "Branches Name: " + "\n" + repBranchMap.get(x) + "\n";
+            //Pobranie kodu sha z najnowszego commitu brancha
+            String urlCommit = "https://api.github.com/repos/" + autor + "/" + x + "/commits";
+            ResponseEntity<String> responseCommit = restTemplate.getForEntity(urlCommit, String.class);
+            String jsonDataCommit = responseCommit.getBody();
+            JSONArray jsonArrayBranch = new JSONArray(jsonDataCommit);
+            jsonResponse += "Last commit: " + "\n" + jsonArrayBranch.getJSONObject(0).getString("sha");
         }
 
-         */
-
-
-        //System.out.println("Lista repozytorium" + repoListPag);
-        /*
-        /////Listowanie branchy
-        String branchUrl = "https://api.github.com/repos/StylingAndroid/androidx/branches";
-        String jsonDataBranch = restTemplate.getForObject(branchUrl, String.class);
-        JSONArray jsonArrayBranch = new JSONArray(jsonDataBranch);
-        LinkedList<String> branchList = new LinkedList<>();
-        for(int i = 0; i < jsonArrayBranch.length(); i ++) {
-            for(String title : jsonArrayBranch.getJSONObject(i).keySet()) {
-                if(title.equals("name")){
-                    branchList.add(jsonArrayBranch.getJSONObject(i).getString(title));
-                }
-            }
-        }
-
-
-
-        System.out.println("Lista branchy:" + branchList);
-        */
-
-        //String finalRespone = "Owner Login: " + autor + "Repository Name: " + repoListPag + "Branch list:" + branchList;
-        String urlCommit = "https://api.github.com/repos/LargeWorldModel/LWM/commits";
-        ResponseEntity<String> responseCommit = restTemplate.getForEntity(urlCommit, String.class);
-        String jsonDataCommit = responseCommit.getBody();
-
-
-        System.out.println("Commity:" + jsonDataCommit);
-        System.out.println(repoListPag);
-        return ResponseEntity.ok(repoListPag);
+        System.out.println(jsonResponse);
+        return ResponseEntity.ok(jsonResponse);
     }
 
 }
