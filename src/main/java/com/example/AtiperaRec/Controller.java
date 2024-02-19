@@ -13,7 +13,6 @@ import java.util.List;
 @RestController
 public class Controller {
 
-    @ResponseBody
     @GetMapping(value = "/{username}", produces = "application/json")
     public ResponseEntity<?> fetchData(@PathVariable String username) {
         ////Listowanie repozytoriów i nazwy użytkownika
